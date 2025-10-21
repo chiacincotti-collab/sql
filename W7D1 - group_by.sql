@@ -19,29 +19,24 @@ HAVING COUNT(*) = 'null' OR COUNT(*) < 1;  #non ci sono valori nulli o con valor
 
 # controllare se la combinazione SalesOrderNumber, SalesOrderLineNumber è PK
 
-SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME
-FROM INFORMATION_SCHEMA.COLUMNS
-WHERE COLUMN_NAME = 'SalesOrderNumber'
-  AND TABLE_SCHEMA = 'AdventureWorksDW';
-
-DESCRIBE factinternetsales;
+DESCRIBE factresellersales;
 
 SELECT SalesOrderNumber, SalesOrderLineNumber, COUNT(*) AS quantity
-FROM factinternetsales
+FROM factresellersales
 GROUP BY SalesOrderNumber, SalesOrderLineNumber
 HAVING COUNT(*) > 1;  # non restituisce nessuna riga dove ci sia una combinazione ripetuta dei due campi ---> ogni combinazione è univoca
 
 SELECT SalesOrderNumber, SalesOrderLineNumber
-FROM factinternetsales
+FROM factresellersales
 WHERE SalesOrderNumber IS NULL OR SalesOrderLineNumber IS NULL; #nessuna riga restituita, non ci sono valori nulli ---> è una Primary Key
 
-DESCRIBE factinternetsales;
+DESCRIBE factresellersales;
 SELECT *
-FROM factinternetsales;
+FROM factresellersales;
 
 # Conta il numero transazioni SalesOrderLineNumber) realizzate ogni giorno a partire dal 1 Gennaio 2020.
 SELECT SalesOrderLineNumber, OrderDate, COUNT(SalesOrderLineNumber) AS NumOrders
-FROM factinternetsales
+FROM factresellersales
 GROUP BY SalesOrderLineNumber, OrderDate
 HAVING OrderDate >= '2020-01-01';
 
@@ -51,13 +46,13 @@ HAVING OrderDate >= '2020-01-01';
 # I campi in output devono essere parlanti!
 
 SELECT dimproduct.EnglishProductName as Name, 
-SUM(factinternetsales.SalesAmount) AS fatt_totale, 
-SUM(factinternetsales.OrderQuantity) AS quant_tot, 
-AVG(factinternetsales.UnitPrice) AS prezzo_medio,
-factinternetsales.OrderDate
-FROM dimproduct INNER JOIN factinternetsales ON dimproduct.ProductKey = factinternetsales.ProductKey
-GROUP BY dimproduct.EnglishProductName, factinternetsales.OrderDate
-HAVING factinternetsales.OrderDate >= '2020-01-01';
+SUM(factresellersales.SalesAmount) AS fatt_totale, 
+SUM(factresellersales.OrderQuantity) AS quant_tot, 
+AVG(factresellersales.UnitPrice) AS prezzo_medio,
+factresellersales.OrderDate
+FROM dimproduct INNER JOIN factresellersales ON dimproduct.ProductKey = factresellersales.ProductKey
+GROUP BY dimproduct.EnglishProductName, factresellersales.OrderDate
+HAVING factresellersales.OrderDate >= '2020-01-01';
 
 # Calcola il fatturato totale FactResellerSales.SalesAmount) e la quantità totale venduta 
 # FactResellerSales.OrderQuantity) per Categoria prodotto DimProductCategory)---> EnglishProductCategoryName AS Category. Il result set deve esporre 
@@ -66,24 +61,17 @@ HAVING factinternetsales.OrderDate >= '2020-01-01';
 # ProductCategoryKey PK dimproductcategory
 # ProductKey PK dimproduct, FK factinternetsales
 
-SELECT *
-FROM factinternetsales; # factinternetsales + DIMPRODUCT ---> mettere il subcategorykey da dimproduct ----> join con dimcategory tramite categorykey
-SELECT *
-FROM dimproduct;
-SELECT *
-FROM dimproductcategory;
-
 SELECT d.ProductSubcategoryKey AS categoryKey,
 SUM(f.SalesAmount) AS fatturato,
 SUM(f.OrderQuantity) AS totale_venduto
-FROM dimproduct as d INNER JOIN factinternetsales as f on d.ProductKey = f.ProductKey
+FROM dimproduct as d INNER JOIN factresellersales as f on d.ProductKey = f.ProductKey
 GROUP BY d.ProductSubcategoryKey;
 
 WITH jt AS (
  SELECT d.ProductSubcategoryKey AS categoryKey,
 SUM(f.SalesAmount) AS fatturato,
 SUM(f.OrderQuantity) AS totale_venduto
-FROM dimproduct as d INNER JOIN factinternetsales as f on d.ProductKey = f.ProductKey
+FROM dimproduct as d INNER JOIN factresellersales as f on d.ProductKey = f.ProductKey
 GROUP BY d.ProductSubcategoryKey
 )
 
